@@ -5,6 +5,8 @@ while [[ $# -gt 0 ]]
 do
 key="$1"
 
+LOG=false
+
 case $key in
     --token)
     TOKEN="$2"
@@ -31,6 +33,11 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    --log)
+    LOG=true
+    shift # past argument
+    shift # past value
+    ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
@@ -39,14 +46,22 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-echo "DEBUG"
-echo "====="
-echo "TOKEN = ${TOKEN}"
-echo "DEVICE = ${DEVICE}"
-echo "VOLUME_NAME = ${VOLUME_NAME}"
-echo "VOLUME_REGION = ${VOLUME_REGION}"
-echo "BUFFER = ${BUFFER}"
-echo
+log () {
+  prefix=""
+  if [[ "$LOG" = true ]]; then
+    prefix="$(date "+%Y-%m-%d %H:%M:%S") "
+  fi
+    echo $prefix$@
+}
+
+log "DEBUG"
+log "====="
+log "TOKEN = ${TOKEN}"
+log "DEVICE = ${DEVICE}"
+log "VOLUME_NAME = ${VOLUME_NAME}"
+log "VOLUME_REGION = ${VOLUME_REGION}"
+log "BUFFER = ${BUFFER}"
+log
 
 digital_ocean_api () {
   api="https://api.digitalocean.com/v2"
@@ -56,11 +71,11 @@ digital_ocean_api () {
 
 main () {
   # Get volume data
-  echo "Getting data for volume \"${VOLUME_NAME}\" in region \"${VOLUME_REGION}\"..."
+  log "Getting data for volume \"${VOLUME_NAME}\" in region \"${VOLUME_REGION}\"..."
   volume_json=$(digital_ocean_api "volumes?region=${VOLUME_REGION}" | jq -r --arg VOLUME_NAME "${VOLUME_NAME}" '.volumes | .[] | select(.name==$VOLUME_NAME)')
   volume_id=$(echo $volume_json | jq -r .id)
   volume_size=$(echo $volume_json | jq -r .size_gigabytes)
-  echo "Volume ID is \"${volume_id}\" and is currently ${volume_size}GB"
+  log "Volume ID is \"${volume_id}\" and is currently ${volume_size}GB"
 }
 
 main
