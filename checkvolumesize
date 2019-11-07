@@ -184,7 +184,7 @@ main () {
   # Increase volume size
   new_volume_size=$(expr $volume_size + $BUFFER)
   log "Increasing volume size to ${new_volume_size}GB..."
-  action_json=$(digital_ocean_api "volumes/2cbebc6a-ff42-11e9-a238-0a58ac14a19d/actions" '{"type":"resize","size_gigabytes":'$new_volume_size'}')
+  action_json=$(digital_ocean_api "volumes/${volume_id}/actions" '{"type":"resize","size_gigabytes":'$new_volume_size'}')
   action_id=$(echo $action_json | jq -r '.action.id')
   log "Created action \"${action_id}\""
 
