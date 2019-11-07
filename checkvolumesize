@@ -143,6 +143,10 @@ main () {
     fi
   done
   log "Filesystem resize complete!"
+
+  # Show new available space on completion
+  new_free_space=$(check_device_free_space $DEVICE)
+  log "Device \"${DEVICE}\" now has ${new_free_space}GB available"
 }
 
 main
