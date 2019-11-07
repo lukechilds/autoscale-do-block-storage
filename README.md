@@ -64,6 +64,47 @@ Device "/dev/sda" now has 17GB available
 Completed in 16 seconds
 ```
 
+## Installation
+
+Clone this repo and add `checkvolumesize` to your path. Then add a cron job as root.
+
+```
+*/10 * * * * checkvolumesize --log [options] >> /var/logs/checkvolumesize.log"
+```
+
+You may also need to add:
+
+```
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+```
+
+to your root crontab for the script to be able to find the `resize2fs` binary.
+
+You can view the log in `/var/logs/checkvolumesize.log`
+
+```
+2019-11-07 11:30:01 Checking available space on device "/dev/sda" is above 10GB requirement...
+2019-11-07 11:30:01 19GB available, all good!
+2019-11-07 11:40:01 Checking available space on device "/dev/sda" is above 10GB requirement...
+2019-11-07 11:40:01 Only 8GB available, volume resize required
+2019-11-07 11:40:01 Getting data for volume "volume-sgp1-01" in region "sgp1"...
+2019-11-07 11:40:03 Volume ID is "2cbebc6a-ff42-11e9-a238-0a58ac14a19d" and is currently 430GB
+2019-11-07 11:40:03 Increasing volume size to 440GB...
+2019-11-07 11:40:10 Created action "796611989"
+2019-11-07 11:40:10 Waiting for action to complete...
+2019-11-07 11:40:17 Volume resize complete!
+2019-11-07 11:40:17 Resizing filesystem...
+2019-11-07 11:40:17 resize2fs 1.44.1 (24-Mar-2018)
+2019-11-07 11:40:17 Filesystem at /dev/sda is mounted on /mnt/volume_sgp1_01; on-line resizing required
+2019-11-07 11:40:17 old_desc_blocks = 54, new_desc_blocks = 55
+2019-11-07 11:40:17 The filesystem on /dev/sda is now 115343360 (4k) blocks long.
+2019-11-07 11:40:17 Filesystem resize complete!
+2019-11-07 11:40:17 Device "/dev/sda" now has 17GB available
+2019-11-07 11:40:17 Completed in 16 seconds
+2019-11-07 11:50:01 Checking available space on device "/dev/sda" is above 10GB requirement...
+2019-11-07 11:50:01 17GB available, all good!
+```
+
 ## License
 
 MIT © Luke Childs
