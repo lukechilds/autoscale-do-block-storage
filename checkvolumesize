@@ -61,6 +61,13 @@ log () {
   echo $prefix$@
 }
 
+check_root () {
+  if [[ $UID != 0 ]]; then
+    log "This script must be run as root"
+    exit 1
+  fi
+}
+
 digital_ocean_api () {
   endpoint=$1
   post_data=$2
@@ -97,6 +104,8 @@ check_device_free_space () {
 }
 
 main () {
+  check_root
+
   # TODO: Check dependencies
 
   # TODO: Check required options are set
