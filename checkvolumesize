@@ -57,7 +57,7 @@ log () {
   if [[ "$LOG" = true ]]; then
     prefix="$(date "+%Y-%m-%d %H:%M:%S") "
   fi
-    echo $prefix$@
+  echo $prefix$@
 }
 
 log "DEBUG"
