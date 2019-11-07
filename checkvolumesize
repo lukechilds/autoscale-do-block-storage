@@ -91,12 +91,32 @@ digital_ocean_api () {
   curl "${args[@]}"
 }
 
+bytes_to_gigabytes () {
+  bytes=$1
+
+  expr $bytes / 1024 / 1024
+}
+
+check_device_free_space () {
+  device=$1
+
+  bytes_free=$(df --output=avail $device | tail -n 1)
+  bytes_to_gigabytes $bytes_free
+}
+
 main () {
   # TODO: Check dependencies
 
   # TODO: Check required options are set
 
   # TODO: Check available volume space
+  log "Checking available space on device \"${DEVICE}\" is above ${BUFFER}GB requirement..."
+  volume_free_space=$(check_device_free_space $DEVICE)
+  if [[ $volume_free_space -gt $BUFFER ]]; then
+    log "${volume_free_space}GB available, all good!"
+    return
+  fi
+  log "Only ${volume_free_space}GB available, volume resize required"
 
   # Get volume data
   log "Getting data for volume \"${VOLUME_NAME}\" in region \"${VOLUME_REGION}\"..."
