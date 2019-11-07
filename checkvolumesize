@@ -198,7 +198,7 @@ main () {
 
   # Resize filesystem
   log "Resizing filesystem..."
-  sudo resize2fs $device 2>&1 | while read line; do
+  sudo resize2fs $DEVICE 2>&1 | while read line; do
     if [[ "${line}" != "" ]]; then
       log $line
     fi
