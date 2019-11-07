@@ -101,7 +101,7 @@ main () {
 
   # TODO: Check required options are set
 
-  # TODO: Check available volume space
+  # Check available volume space
   log "Checking available space on device \"${DEVICE}\" is above ${BUFFER}GB requirement..."
   volume_free_space=$(check_device_free_space $DEVICE)
   if [[ $volume_free_space -gt $BUFFER ]]; then
