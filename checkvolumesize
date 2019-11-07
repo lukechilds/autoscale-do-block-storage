@@ -50,3 +50,14 @@ digital_ocean_api () {
   endpoint=$1
   curl --silent -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" "${api}/${endpoint}"
 }
+
+main () {
+  # Get volume data
+  echo "Getting data for volume \"${VOLUME_NAME}\" in region \"${VOLUME_REGION}\"..."
+  volume_json=$(digital_ocean_api "volumes?region=${VOLUME_REGION}" | jq -r --arg VOLUME_NAME "${VOLUME_NAME}" '.volumes | .[] | select(.name==$VOLUME_NAME)')
+  volume_id=$(echo $volume_json | jq -r .id)
+  volume_size=$(echo $volume_json | jq -r .size_gigabytes)
+  echo "Volume ID is \"${volume_id}\" and is currently ${volume_size}GB"
+}
+
+main
