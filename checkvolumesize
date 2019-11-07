@@ -77,6 +77,13 @@ check_dependencies () {
   done
 }
 
+check_options () {
+  if [[ -z $TOKEN || -z $DEVICE || -z $VOLUME_NAME || -z $VOLUME_REGION ]]; then
+    log 'You are missing required options'
+    exit 1
+  fi
+}
+
 digital_ocean_api () {
   endpoint=$1
   post_data=$2
@@ -115,8 +122,7 @@ check_device_free_space () {
 main () {
   check_root
   check_dependencies curl jq expr resize2fs
-
-  # TODO: Check required options are set
+  check_options
 
   # Check available volume space
   log "Checking available space on device \"${DEVICE}\" is above ${BUFFER}GB requirement..."
