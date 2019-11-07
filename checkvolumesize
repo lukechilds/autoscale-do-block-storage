@@ -68,6 +68,15 @@ check_root () {
   fi
 }
 
+check_dependencies () {
+  for cmd in "$@"; do
+    if ! command -v $cmd >/dev/null 2>&1; then
+      log "This script requires \"${cmd}\" to be installed"
+      exit 1
+    fi
+  done
+}
+
 digital_ocean_api () {
   endpoint=$1
   post_data=$2
@@ -105,8 +114,7 @@ check_device_free_space () {
 
 main () {
   check_root
-
-  # TODO: Check dependencies
+  check_dependencies curl jq expr resize2fs
 
   # TODO: Check required options are set
 
