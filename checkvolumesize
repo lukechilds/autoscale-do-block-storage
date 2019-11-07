@@ -1,5 +1,36 @@
 #!/usr/bin/env bash
 
+show_help () {
+  cat << EOF
+checkvolumesize 1.0.0
+
+Automatically expand Digital Ocean block storage volumes.
+
+Usage: ./checkvolumesize [options]
+
+Options:
+
+  --help | -h | help    [Optional] Show this help message
+  --token               [Required] Digital Ocean API token
+  --device              [Required] The volume's block device
+  --volume-name         [Required] The volume's name
+  --volume-region       [Required] The volume's region
+  --buffer              [Optional] The amount of GB to keep available    Default: 10
+  --log                 [Optional] Prepend timestamps to stdout
+
+Example:
+
+  ./checkvolumesize /
+    --token bc99be9f73b037da64074472fe58f643e619328b85c5467615964a59abd12029 /
+    --device /dev/sda /
+    --volume-name volume-sgp1-01 /
+    --volume-region sgp1 /
+    --buffer 10
+
+GitHub: https://github.com/lukechilds/digital-ocean-autoscale-block-storage
+EOF
+}
+
 # Parse options
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
@@ -9,6 +40,11 @@ while [[ $# -gt 0 ]]; do
   LOG=false
 
   case $key in
+      --help|-h|help)
+        show_help
+        exit
+        ;;
+
       --token)
         TOKEN="$2"
         shift
@@ -80,6 +116,8 @@ check_dependencies () {
 check_options () {
   if [[ -z $TOKEN || -z $DEVICE || -z $VOLUME_NAME || -z $VOLUME_REGION ]]; then
     log 'You are missing required options'
+    echo
+    show_help
     exit 1
   fi
 }
