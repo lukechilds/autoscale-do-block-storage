@@ -61,15 +61,6 @@ log () {
   echo $prefix$@
 }
 
-log "DEBUG"
-log "====="
-log "TOKEN = ${TOKEN}"
-log "DEVICE = ${DEVICE}"
-log "VOLUME_NAME = ${VOLUME_NAME}"
-log "VOLUME_REGION = ${VOLUME_REGION}"
-log "BUFFER = ${BUFFER}"
-log
-
 digital_ocean_api () {
   endpoint=$1
   post_data=$2
