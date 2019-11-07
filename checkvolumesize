@@ -92,6 +92,12 @@ digital_ocean_api () {
 }
 
 main () {
+  # TODO: Check dependencies
+
+  # TODO: Check required options are set
+
+  # TODO: Check available volume space
+
   # Get volume data
   log "Getting data for volume \"${VOLUME_NAME}\" in region \"${VOLUME_REGION}\"..."
   volume_json=$(digital_ocean_api "volumes?region=${VOLUME_REGION}" | jq -r --arg VOLUME_NAME "${VOLUME_NAME}" '.volumes | .[] | select(.name==$VOLUME_NAME)')
@@ -115,6 +121,9 @@ main () {
     sleep 1
   done
   log "Volume resize complete!"
+
+  # TODO: Resize filesystem
+  # sudo resize2fs $DEVICE
 }
 
 main
