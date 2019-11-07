@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    --token)
+    TOKEN="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --device)
+    DEVICE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --volume-name)
+    VOLUME_NAME="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --volume-region)
+    VOLUME_REGION="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --buffer)
+    BUFFER="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    *)    # unknown option
+    POSITIONAL+=("$1") # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+echo "TOKEN = ${TOKEN}"
+echo "DEVICE = ${DEVICE}"
+echo "VOLUME_NAME = ${VOLUME_NAME}"
+echo "VOLUME_REGION = ${VOLUME_REGION}"
+echo "BUFFER = ${BUFFER}"
