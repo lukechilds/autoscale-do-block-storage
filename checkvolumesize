@@ -39,11 +39,14 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
+echo "DEBUG"
+echo "====="
 echo "TOKEN = ${TOKEN}"
 echo "DEVICE = ${DEVICE}"
 echo "VOLUME_NAME = ${VOLUME_NAME}"
 echo "VOLUME_REGION = ${VOLUME_REGION}"
 echo "BUFFER = ${BUFFER}"
+echo
 
 digital_ocean_api () {
   api="https://api.digitalocean.com/v2"
