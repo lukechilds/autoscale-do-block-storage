@@ -135,8 +135,14 @@ main () {
   done
   log "Volume resize complete!"
 
-  # TODO: Resize filesystem
-  # sudo resize2fs $DEVICE
+  # Resize filesystem
+  log "Resizing filesystem..."
+  sudo resize2fs $device 2>&1 | while read line; do
+    if [[ "${line}" != "" ]]; then
+      log $line
+    fi
+  done
+  log "Filesystem resize complete!"
 }
 
 main
