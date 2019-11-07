@@ -112,6 +112,7 @@ main () {
   action_id=$(echo $action_json | jq -r '.action.id')
   log "Created action \"${action_id}\""
 
+  # Wait for volume resize
   log "Waiting for action to complete..."
   while true; do
     resize_status=$(digital_ocean_api "actions/$action_id" | jq -r '.action.status')
