@@ -105,6 +105,16 @@ main () {
   action_json=$(digital_ocean_api "volumes/2cbebc6a-ff42-11e9-a238-0a58ac14a19d/actions" '{"type":"resize","size_gigabytes":'$new_volume_size'}')
   action_id=$(echo $action_json | jq -r '.action.id')
   log "Created action \"${action_id}\""
+
+  log "Waiting for action to complete..."
+  while true; do
+    resize_status=$(digital_ocean_api "actions/$action_id" | jq -r '.action.status')
+    if [[ "${resize_status}" == "completed" ]]; then
+      break
+    fi
+    sleep 1
+  done
+  log "Volume resize complete!"
 }
 
 main
