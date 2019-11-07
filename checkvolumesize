@@ -12,7 +12,7 @@ Options:
 
   --help | -h | help    [Optional] Show this help message
   --token               [Required] Digital Ocean API token
-  --device              [Required] The volume's block device
+  --device              [Required] The volume's block device or mount point
   --volume-name         [Required] The volume's name
   --volume-region       [Required] The volume's region
   --buffer              [Optional] The amount of GB to keep available    Default: 10
@@ -22,7 +22,7 @@ Example:
 
   checkvolumesize /
     --token bc99be9f73b037da64074472fe58f643e619328b85c5467615964a59abd12029 /
-    --device /dev/sda /
+    --device /mnt/block-storage /
     --volume-name volume-sgp1-01 /
     --volume-region sgp1 /
     --buffer 10
@@ -157,6 +157,12 @@ check_device_free_space () {
   bytes_to_gigabytes $bytes_free
 }
 
+mountpoint_to_device () {
+  mountpoint=$1
+
+  df --output=source $mountpoint | tail -n 1
+}
+
 main () {
   check_root
   check_dependencies curl jq expr resize2fs
@@ -201,7 +207,7 @@ main () {
 
   # Resize filesystem
   log "Resizing filesystem..."
-  sudo resize2fs $DEVICE 2>&1 | while read line; do
+  sudo resize2fs $(mountpoint_to_device $DEVICE) 2>&1 | while read line; do
     if [[ "${line}" != "" ]]; then
       log $line
     fi

@@ -24,7 +24,7 @@ Options:
 
   --help | -h | help    [Optional] Show this help message
   --token               [Required] Digital Ocean API token
-  --device              [Required] The volume's block device
+  --device              [Required] The volume's block device or mount point
   --volume-name         [Required] The volume's name
   --volume-region       [Required] The volume's region
   --buffer              [Optional] The amount of GB to keep available    Default: 10
@@ -34,7 +34,7 @@ Example:
 
   checkvolumesize /
     --token bc99be9f73b037da64074472fe58f643e619328b85c5467615964a59abd12029 /
-    --device /dev/sda /
+    --device /mnt/block-storage /
     --volume-name volume-sgp1-01 /
     --volume-region sgp1 /
     --buffer 10
