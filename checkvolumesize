@@ -171,6 +171,9 @@ main () {
   fi
   log "Only ${volume_free_space}GB available, volume resize required"
 
+  # Save start time
+  start_time=$SECONDS
+
   # Get volume data
   log "Getting data for volume \"${VOLUME_NAME}\" in region \"${VOLUME_REGION}\"..."
   volume_json=$(digital_ocean_api "volumes?region=${VOLUME_REGION}" | jq -r --arg VOLUME_NAME "${VOLUME_NAME}" '.volumes | .[] | select(.name==$VOLUME_NAME)')
@@ -208,6 +211,10 @@ main () {
   # Show new available space on completion
   new_free_space=$(check_device_free_space $DEVICE)
   log "Device \"${DEVICE}\" now has ${new_free_space}GB available"
+
+  # Show duration
+  duration=$(expr $SECONDS - $start_time)
+  log "Completed in ${duration} seconds"
 }
 
 main
