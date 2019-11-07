@@ -27,7 +27,7 @@ Example:
     --volume-region sgp1 /
     --buffer 10
 
-GitHub: https://github.com/lukechilds/digital-ocean-autoscale-block-storage
+GitHub: https://github.com/lukechilds/autoscale-do-block-storage
 EOF
 }
 
