@@ -1,50 +1,56 @@
 #!/usr/bin/env bash
 
+# Parse options
 POSITIONAL=()
-while [[ $# -gt 0 ]]
-do
-key="$1"
+while [[ $# -gt 0 ]]; do
+  key="$1"
 
-LOG=false
+  LOG=false
 
-case $key in
-    --token)
-    TOKEN="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    --device)
-    DEVICE="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    --volume-name)
-    VOLUME_NAME="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    --volume-region)
-    VOLUME_REGION="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    --buffer)
-    BUFFER="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    --log)
-    LOG=true
-    shift # past argument
-    shift # past value
-    ;;
-    *)    # unknown option
-    POSITIONAL+=("$1") # save it in an array for later
-    shift # past argument
-    ;;
-esac
+  case $key in
+      --token)
+        TOKEN="$2"
+        shift
+        shift
+        ;;
+
+      --device)
+        DEVICE="$2"
+        shift
+        shift
+        ;;
+
+      --volume-name)
+        VOLUME_NAME="$2"
+        shift
+        shift
+        ;;
+
+      --volume-region)
+        VOLUME_REGION="$2"
+        shift
+        shift
+        ;;
+
+      --buffer)
+        BUFFER="$2"
+        shift
+        shift
+        ;;
+
+      --log)
+        LOG=true
+        shift
+        shift
+        ;;
+
+      *)
+      POSITIONAL+=("$1")
+        shift
+        ;;
+  esac
 done
-set -- "${POSITIONAL[@]}" # restore positional parameters
+set -- "${POSITIONAL[@]}"
 
 log () {
   prefix=""
