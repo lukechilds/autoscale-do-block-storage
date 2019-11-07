@@ -70,9 +70,25 @@ log "BUFFER = ${BUFFER}"
 log
 
 digital_ocean_api () {
-  api="https://api.digitalocean.com/v2"
   endpoint=$1
-  curl --silent -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" "${api}/${endpoint}"
+  post_data=$2
+
+  method="GET"
+  if [[ $post_data ]]; then
+    method="POST"
+  fi
+
+  args=()
+  args+=("--silent")
+  args+=("-X" $method)
+  args+=("-H" "Content-Type: application/json")
+  args+=("-H" "Authorization: Bearer ${TOKEN}")
+  if [[ $post_data ]]; then
+    args+=("-d" $post_data)
+  fi
+  args+=("https://api.digitalocean.com/v2/${endpoint}")
+
+  curl "${args[@]}"
 }
 
 main () {
