@@ -6,7 +6,7 @@ checkvolumesize 1.0.0
 
 Automatically expand Digital Ocean block storage volumes.
 
-Usage: ./checkvolumesize [options]
+Usage: checkvolumesize [options]
 
 Options:
 
@@ -20,7 +20,7 @@ Options:
 
 Example:
 
-  ./checkvolumesize /
+  checkvolumesize /
     --token bc99be9f73b037da64074472fe58f643e619328b85c5467615964a59abd12029 /
     --device /dev/sda /
     --volume-name volume-sgp1-01 /
