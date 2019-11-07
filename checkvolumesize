@@ -44,3 +44,9 @@ echo "DEVICE = ${DEVICE}"
 echo "VOLUME_NAME = ${VOLUME_NAME}"
 echo "VOLUME_REGION = ${VOLUME_REGION}"
 echo "BUFFER = ${BUFFER}"
+
+digital_ocean_api () {
+  api="https://api.digitalocean.com/v2"
+  endpoint=$1
+  curl --silent -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" "${api}/${endpoint}"
+}
