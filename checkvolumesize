@@ -1,10 +1,12 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
+
+set -e
 
 show_help () {
-  cat << EOF
-checkvolumesize 1.0.0
+  cat << EOF >&2
+checkvolumesize 1.0.1
 
-Automatically expand Digital Ocean block storage volumes.
+Automatically expand Digital Ocean block storage volumes
 
 Usage: checkvolumesize [options]
 
@@ -28,96 +30,109 @@ Example:
     --buffer 10
 
 GitHub: https://github.com/lukechilds/autoscale-do-block-storage
+
 EOF
 }
 
-# Parse options
-POSITIONAL=()
-while [[ $# -gt 0 ]]; do
-  key="$1"
+# If no arguments passed, show help and exit
+if [ $# -le 0 ]; then
+  show_help
+  exit 1
+fi
 
-  BUFFER=10
-  LOG=false
-
-  case $key in
-      --help|-h|help)
-        show_help
-        exit
-        ;;
-
-      --token)
-        TOKEN="$2"
-        shift
-        shift
-        ;;
-
-      --device)
-        DEVICE="$2"
-        shift
-        shift
-        ;;
-
-      --volume-name)
-        VOLUME_NAME="$2"
-        shift
-        shift
-        ;;
-
-      --volume-region)
-        VOLUME_REGION="$2"
-        shift
-        shift
-        ;;
-
-      --buffer)
-        BUFFER="$2"
-        shift
-        shift
-        ;;
-
-      --log)
-        LOG=true
-        shift
-        shift
-        ;;
-
-      *)
-      POSITIONAL+=("$1")
-        shift
-        ;;
-  esac
-done
-set -- "${POSITIONAL[@]}"
+# Holders for all arguments passed (w/defaults set when defined)
+TOKEN=
+DEVICE=
+VOLUME_NAME=
+VOLUME_REGION=
+BUFFER=10
+LOG=
 
 log () {
   prefix=""
-  if [[ "$LOG" = true ]]; then
+  if [ "$LOG" = true ]; then
     prefix="$(date "+%Y-%m-%d %H:%M:%S") "
   fi
-  echo $prefix$@
+
+  >&2 echo "${prefix}$*"
 }
 
+error () {
+  >&2 echo
+  log "ERROR: $*"
+}
+
+help_error () {
+  error "$*"
+  >&2 echo
+  show_help
+}
+
+while true; do
+  # no parameters remaining -> end option parsing
+  if [ $# -le 0 ]; then
+    break
+  fi
+
+  # For each new arg, strip the first leading `-` (if any)
+  opt="$(echo "$1" | sed 's|^-\?\([a-zA-Z0-9\?-]*\)|\1|')"
+
+  # Handle fmt: `--buffer=10`;  Split `opt` on `=` into `opt` & `value`
+  # NOTE: prepended with `=`, because if `-d` isn't found, `cut` ignores `-f`, and returns the whole string regardless…
+  value="$(echo "=${opt}" | cut -d= -f3)"
+  if [ -n "${value}" ]; then
+    opt="$(echo "=${opt}" | cut -d= -f2)"
+  fi
+
+  # Handle fmt: `--buffer 10`;  Leave `opt` as-is, and get next `value` from next arg
+  #   NOTE: only do it when next arg doesn't start with `-`
+  if [ -z "${value}" ] && [ "$2" = "${2#-}" ]; then
+    value="$2"
+    shift
+  fi
+
+  # Always `shift` the arg that was just used up
+  shift
+
+  case $opt in
+    h|?|-help|help)
+      show_help
+      exit 0
+      ;;
+
+    -token)         TOKEN="${value}" ;;
+    -device)        DEVICE="${value}" ;;
+    -volume-name)   VOLUME_NAME="${value}" ;;
+    -volume-region) VOLUME_REGION="${value}" ;;
+    -buffer)        BUFFER="${value}" ;;
+    -log)           LOG=true ;;
+
+    *)
+      help_error "Unknown option: \"${opt}\""
+      exit 1
+      ;;
+  esac
+done
+
 check_root () {
-  if [[ $UID != 0 ]]; then
-    log "This script must be run as root"
+  if [ "$(id -u)" != "0" ]; then
+    error "This script must be run as root"
     exit 1
   fi
 }
 
 check_dependencies () {
   for cmd in "$@"; do
-    if ! command -v $cmd >/dev/null 2>&1; then
-      log "This script requires \"${cmd}\" to be installed"
+    if ! command -v "${cmd}" >/dev/null 2>&1; then
+      error "This script requires \"${cmd}\" to be installed"
       exit 1
     fi
   done
 }
 
 check_options () {
-  if [[ -z $TOKEN || -z $DEVICE || -z $VOLUME_NAME || -z $VOLUME_REGION ]]; then
-    log 'You are missing required options'
-    echo
-    show_help
+  if [ -z "${TOKEN}" ] || [ -z "${DEVICE}" ] || [ -z "${VOLUME_NAME}" ] || [ -z "${VOLUME_REGION}" ]; then
+    help_error 'You are missing required options'
     exit 1
   fi
 }
@@ -126,100 +141,100 @@ digital_ocean_api () {
   endpoint=$1
   post_data=$2
 
-  method="GET"
-  if [[ $post_data ]]; then
-    method="POST"
-  fi
+  # If `post_data` provided, method=POST, otherwise method=GET
+  method="${post_data:+POST}"
+  method="${method:-GET}"
 
-  args=()
-  args+=("--silent")
-  args+=("-X" $method)
-  args+=("-H" "Content-Type: application/json")
-  args+=("-H" "Authorization: Bearer ${TOKEN}")
-  if [[ $post_data ]]; then
-    args+=("-d" $post_data)
-  fi
-  args+=("https://api.digitalocean.com/v2/${endpoint}")
+  # If set, prepend `post_data` with `-d `
+  post_data="${post_data:+-d ${post_data}}"
 
-  curl "${args[@]}"
+  curl --silent \
+    -X "${method}" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer ${TOKEN}" \
+    "${post_data}" \
+    "https://api.digitalocean.com/v2/${endpoint}"
 }
 
-bytes_to_gigabytes () {
-  bytes=$1
+kilobytes_to_gigabytes () {
+  kilobytes=$1
 
-  expr $bytes / 1024 / 1024
+  echo $(( kilobytes / 1024 / 1024 ))
 }
 
 check_device_free_space () {
   device=$1
 
-  bytes_free=$(df --output=avail $device | tail -n 1)
-  bytes_to_gigabytes $bytes_free
+  bytes_free=$(df --output=avail "${device}" | tail -n 1)
+  kilobytes_to_gigabytes "${bytes_free}"
 }
 
 mountpoint_to_device () {
   mountpoint=$1
 
-  df --output=source $mountpoint | tail -n 1
+  df --output=source "${mountpoint}" | tail -n 1
 }
 
 main () {
   check_root
-  check_dependencies curl jq expr resize2fs
+  check_dependencies curl jq resize2fs
   check_options
 
   # Check available volume space
   log "Checking available space on device \"${DEVICE}\" is above ${BUFFER}GB requirement..."
-  volume_free_space=$(check_device_free_space $DEVICE)
-  if [[ $volume_free_space -gt $BUFFER ]]; then
+  volume_free_space=$(check_device_free_space "$DEVICE")
+  if [ "$volume_free_space" -gt "$BUFFER" ]; then
     log "${volume_free_space}GB available, all good!"
     return
   fi
   log "Only ${volume_free_space}GB available, volume resize required"
 
   # Save start time
-  start_time=$SECONDS
+  start_time="$(date +%s)"
 
   # Get volume data
   log "Getting data for volume \"${VOLUME_NAME}\" in region \"${VOLUME_REGION}\"..."
-  volume_json=$(digital_ocean_api "volumes?region=${VOLUME_REGION}" | jq -r --arg VOLUME_NAME "${VOLUME_NAME}" '.volumes | .[] | select(.name==$VOLUME_NAME)')
-  volume_id=$(echo $volume_json | jq -r .id)
-  volume_size=$(echo $volume_json | jq -r .size_gigabytes)
+  volume_json=$(digital_ocean_api "volumes?region=${VOLUME_REGION}" | jq -r ".volumes[] | select(.name==\"${VOLUME_NAME}\")")
+  volume_id=$(echo "$volume_json" | jq -r .id)
+  volume_size=$(echo "$volume_json" | jq -r .size_gigabytes)
   log "Volume ID is \"${volume_id}\" and is currently ${volume_size}GB"
 
   # Increase volume size
-  new_volume_size=$(expr $volume_size + $BUFFER)
+  new_volume_size=$(( volume_size + BUFFER ))
   log "Increasing volume size to ${new_volume_size}GB..."
-  action_json=$(digital_ocean_api "volumes/${volume_id}/actions" '{"type":"resize","size_gigabytes":'$new_volume_size'}')
-  action_id=$(echo $action_json | jq -r '.action.id')
+  action_json=$(digital_ocean_api "volumes/${volume_id}/actions" '{"type":"resize","size_gigabytes":'${new_volume_size}'}')
+  action_id="$(echo "${action_json}" | jq -r '.action.id')"
   log "Created action \"${action_id}\""
 
   # Wait for volume resize
   log "Waiting for action to complete..."
   while true; do
-    resize_status=$(digital_ocean_api "actions/$action_id" | jq -r '.action.status')
-    if [[ "${resize_status}" == "completed" ]]; then
+    resize_status=$(digital_ocean_api "actions/${action_id}" | jq -r '.action.status')
+    if [ "${resize_status}" = "completed" ]; then
       break
     fi
+
+    >&2 printf '.' # for progress
     sleep 1
   done
   log "Volume resize complete!"
 
   # Resize filesystem
   log "Resizing filesystem..."
-  sudo resize2fs $(mountpoint_to_device $DEVICE) 2>&1 | while read line; do
-    if [[ "${line}" != "" ]]; then
-      log $line
+  sudo resize2fs "$(mountpoint_to_device "${DEVICE}")" 2>&1 | while read -r line; do
+    if [ "${line}" != "" ]; then
+      log "$line"
     fi
   done
   log "Filesystem resize complete!"
 
   # Show new available space on completion
-  new_free_space=$(check_device_free_space $DEVICE)
+  new_free_space=$(check_device_free_space "${DEVICE}")
   log "Device \"${DEVICE}\" now has ${new_free_space}GB available"
 
   # Show duration
-  duration=$(expr $SECONDS - $start_time)
+  now="$(date +%s)"
+  duration=$(( now - start_time ))
   log "Completed in ${duration} seconds"
 }
 
