@@ -69,7 +69,7 @@ Completed in 16 seconds
 Clone this repo and add `checkvolumesize` to your path. Then add a cron job as root.
 
 ```
-*/10 * * * * checkvolumesize --log [options] >> /var/logs/checkvolumesize.log"
+*/10 * * * * checkvolumesize --log [options] 2>&1 >> /var/log/checkvolumesize.log"
 ```
 
 You may also need to add:
@@ -80,7 +80,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 to your root crontab for the script to be able to find the `resize2fs` binary.
 
-You can view the log in `/var/logs/checkvolumesize.log`
+You can view the log in `/var/log/checkvolumesize.log`
 
 ```
 2019-11-07 11:30:01 Checking available space on device "/dev/sda" is above 10GB requirement...
