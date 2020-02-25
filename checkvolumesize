@@ -74,7 +74,6 @@ while true; do
     break
   fi
 
-  # For each new arg, strip the first leading `-` (if any)
   opt="$1"
 
   # Handle fmt: `--buffer=10`; Split `opt` on `=` into `opt` & `value`
@@ -84,7 +83,7 @@ while true; do
     opt="$(echo "=$opt" | cut -d= -f2)"
   fi
 
-  # Handle fmt: `--buffer 10`; Leave `opt` as-is, and get next `value` from next arg
+  # Handle fmt: `--buffer 10`; Leave `opt` as-is, and try to get `value` from next arg
   #   NOTE: only do it when next arg doesn't start with `-`
   if [ -z "$value" ] && [ "$2" = "${2#-}" ]; then
     value="$2"
@@ -125,7 +124,7 @@ check_root () {
 check_dependencies () {
   for cmd in "$@"; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
-      error "This script requires \"$cmd\" to be installed"
+      error "This script requires \"${cmd}\" to be installed"
       exit 1
     fi
   done
@@ -152,9 +151,9 @@ digital_ocean_api () {
   curl --silent \
     -X "$method" \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer $TOKEN" \
+    -H "Authorization: Bearer ${TOKEN}" \
     "$post_data" \
-    "https://api.digitalocean.com/v2/$endpoint"
+    "https://api.digitalocean.com/v2/${endpoint}"
 }
 
 kilobytes_to_gigabytes () {
@@ -182,7 +181,7 @@ main () {
   check_options
 
   # Check available volume space
-  log "Checking available space on device \"$DEVICE\" is above ${BUFFER}GB requirement..."
+  log "Checking available space on device \"${DEVICE}\" is above ${BUFFER}GB requirement..."
   volume_free_space=$(check_device_free_space "$DEVICE")
   if [ "$volume_free_space" -gt "$BUFFER" ]; then
     log "${volume_free_space}GB available, all good!"
@@ -194,24 +193,24 @@ main () {
   start_time="$(date +%s)"
 
   # Get volume data
-  log "Getting data for volume \"$VOLUME_NAME\" in region \"$VOLUME_REGION\"..."
-  volume_json=$(digital_ocean_api "volumes?region=$VOLUME_REGION" | jq -r ".volumes[] | select(.name==\"$VOLUME_NAME\")")
+  log "Getting data for volume \"${VOLUME_NAME}\" in region \"${VOLUME_REGION}\"..."
+  volume_json=$(digital_ocean_api "volumes?region=${VOLUME_REGION}" | jq -r ".volumes[] | select(.name==\"${VOLUME_NAME}\")")
   volume_id=$(echo "$volume_json" | jq -r .id)
   volume_size=$(echo "$volume_json" | jq -r .size_gigabytes)
-  log "Volume ID is \"$volume_id\" and is currently ${volume_size}GB"
+  log "Volume ID is \"${volume_id}\" and is currently ${volume_size}GB"
 
   # Increase volume size
   new_volume_size=$(( volume_size + BUFFER ))
   log "Increasing volume size to ${new_volume_size}GB..."
-  action_json=$(digital_ocean_api "volumes/$volume_id/actions" '{"type":"resize","size_gigabytes":'$new_volume_size'}')
+  action_json=$(digital_ocean_api "volumes/${volume_id}/actions" '{"type":"resize","size_gigabytes":'$new_volume_size'}')
   action_id="$(echo "$action_json" | jq -r '.action.id')"
-  log "Created action \"$action_id\""
+  log "Created action \"${action_id}\""
 
   # Wait for volume resize
   log "Waiting for action to complete..."
   while true; do
     resize_status=$(digital_ocean_api "actions/$action_id" | jq -r '.action.status')
-    if [ "$resize_status" = "completed" ]; then
+    if [ "${resize_status}" = "completed" ]; then
       break
     fi
 
@@ -223,7 +222,7 @@ main () {
   # Resize filesystem
   log "Resizing filesystem..."
   sudo resize2fs "$(mountpoint_to_device "$DEVICE")" 2>&1 | while read -r line; do
-    if [ "$line" != "" ]; then
+    if [ "${line}" != "" ]; then
       log "$line"
     fi
   done
@@ -231,12 +230,12 @@ main () {
 
   # Show new available space on completion
   new_free_space=$(check_device_free_space "$DEVICE")
-  log "Device \"$DEVICE\" now has ${new_free_space}GB available"
+  log "Device \"${DEVICE}\" now has ${new_free_space}GB available"
 
   # Show duration
   now="$(date +%s)"
   duration=$(( now - start_time ))
-  log "Completed in $duration seconds"
+  log "Completed in ${duration} seconds"
 }
 
 main
