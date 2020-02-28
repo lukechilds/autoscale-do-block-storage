@@ -78,7 +78,7 @@ while true; do
 
   # Handle fmt: `--buffer=10`; Split `opt` on `=` into `opt` & `value`
   #   NOTE: prepended with `=`, because if `-d` isn't found, `cut` ignores `-f`, and returns the whole string regardless…
-  value="$(echo "=$opt" | cut -d= -f3)"
+  value="$(echo "=$opt" | cut -d= -f3-)"
   if [ -n "$value" ]; then
     opt="$(echo "=$opt" | cut -d= -f2)"
   fi
