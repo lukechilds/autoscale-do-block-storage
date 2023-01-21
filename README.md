@@ -69,7 +69,7 @@ Completed in 16 seconds
 Clone this repo and add `checkvolumesize` to your path. Then add a cron job as root.
 
 ```
-*/10 * * * * checkvolumesize --log [options] >> /var/logs/checkvolumesize.log"
+*/10 * * * * checkvolumesize [options] --log >> /var/log/checkvolumesize.log
 ```
 
 You may also need to add:
