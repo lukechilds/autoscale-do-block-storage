@@ -80,7 +80,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 to your root crontab for the script to be able to find the `resize2fs` binary.
 
-You can view the log in `/var/logs/checkvolumesize.log`
+You can view the log in `/var/log/checkvolumesize.log`
 
 ```
 2019-11-07 11:30:01 Checking available space on device "/dev/sda" is above 10GB requirement...
