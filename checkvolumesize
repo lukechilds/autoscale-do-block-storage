@@ -33,11 +33,11 @@ EOF
 
 # Parse options
 POSITIONAL=()
+BUFFER=10
+LOG=false
+
 while [[ $# -gt 0 ]]; do
   key="$1"
-
-  BUFFER=10
-  LOG=false
 
   case $key in
       --help|-h|help)
